@@ -31,7 +31,7 @@ type Eval struct {
 
 type cmd map[string]interface{}
 
-//New creates new instance of Eval
+// New creates new instance of Eval
 func New(out io.Writer) *Eval {
 	return &Eval{
 		out:   out,
@@ -40,7 +40,7 @@ func New(out io.Writer) *Eval {
 	}
 }
 
-//Run runs evaluation of the given code
+// Run runs evaluation of the given code
 func (e *Eval) Run(in []byte) error {
 	if err := e.parseInput(in); err != nil {
 		return err
@@ -49,7 +49,7 @@ func (e *Eval) Run(in []byte) error {
 }
 
 func (e *Eval) run(name string, commands []cmd, called map[string]interface{}) error {
-	commands, ok := e.funcs[name]
+	_, ok := e.funcs[name]
 	if !ok {
 		return errors.New("no function: " + name)
 	}
@@ -83,7 +83,6 @@ func (e *Eval) run(name string, commands []cmd, called map[string]interface{}) e
 		if callErr != nil {
 			return callErr
 		}
-
 	}
 	return nil
 }

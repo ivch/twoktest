@@ -9,28 +9,24 @@ func (e *Eval) add(code, called map[string]interface{}) error {
 	return e.callback(code, called, func(a, b float64) float64 {
 		return a + b
 	})
-	return nil
 }
 
 func (e *Eval) sub(code, called map[string]interface{}) error {
 	return e.callback(code, called, func(a, b float64) float64 {
 		return a - b
 	})
-	return nil
 }
 
 func (e *Eval) multiply(code, called map[string]interface{}) error {
 	return e.callback(code, called, func(a, b float64) float64 {
 		return a * b
 	})
-	return nil
 }
 
 func (e *Eval) div(code, called map[string]interface{}) error {
 	return e.callback(code, called, func(a, b float64) float64 {
 		return a / b
 	})
-	return nil
 }
 
 func (e *Eval) update(code map[string]interface{}) error {

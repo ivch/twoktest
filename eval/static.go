@@ -1,7 +1,6 @@
 package eval
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -52,7 +51,7 @@ func (e *Eval) create(code map[string]interface{}) error {
 	}
 
 	if _, err := e.vars.get(name); err == nil {
-		return errors.New("variable already exists")
+		return errVarExists
 	}
 
 	value, err := e.getVarValue(valueKey, code, nil)
@@ -71,7 +70,7 @@ func (e *Eval) delete(code map[string]interface{}) error {
 	}
 
 	if _, err := e.vars.get(name); err != nil {
-		return errors.New("variable not found")
+		return errVarNotFound
 	}
 
 	e.vars.delete(name)
@@ -97,16 +96,16 @@ func (e *Eval) callback(code, called map[string]interface{}, f func(float64, flo
 
 func (e *Eval) print(code map[string]interface{}) error {
 	if _, ok := code[valueKey]; !ok {
-		return errors.New("no variable given")
+		return errVarNotFound
 	}
 
 	name, ok := code[valueKey].(string)
 	if !ok {
-		return errors.New("invalid variable name")
+		return errVarBadName
 	}
 
 	if name[0] != '#' {
-		return errors.New("bad variable reference")
+		return errVarBadRef
 	}
 
 	value, err := e.vars.get(name[1:])
@@ -121,12 +120,12 @@ func (e *Eval) print(code map[string]interface{}) error {
 
 func (e *Eval) getTargetVariable(code, called map[string]interface{}) (string, error) {
 	if _, ok := code[varKey]; !ok {
-		return "", errors.New("no variable given")
+		return "", errVarNotFound
 	}
 
 	name, ok := code[varKey].(string)
 	if !ok {
-		return "", errors.New("invalid variable name")
+		return "", errVarBadName
 	}
 
 	if name[0] == '$' {
@@ -139,7 +138,7 @@ func (e *Eval) getTargetVariable(code, called map[string]interface{}) (string, e
 func (e *Eval) getVarValue(name string, code, called map[string]interface{}) (float64, error) {
 	v, ok := code[name]
 	if !ok {
-		return 0, errors.New("no variable given")
+		return 0, errVarNotFound
 	}
 
 	switch val := v.(type) {
@@ -148,11 +147,11 @@ func (e *Eval) getVarValue(name string, code, called map[string]interface{}) (fl
 	case string:
 		name = val
 	default:
-		return 0, errors.New("wrong variable type")
+		return 0, errVarBadType
 	}
 
 	if len(name) == 0 {
-		return 0, errors.New("wrong variable name")
+		return 0, errVarBadName
 	}
 
 	switch name[0] {
@@ -161,7 +160,7 @@ func (e *Eval) getVarValue(name string, code, called map[string]interface{}) (fl
 	case '$':
 		return e.getVarValue(name[1:], called, nil)
 	default:
-		return 0, errors.New("wrong variable name")
+		return 0, errVarBadName
 	}
 	return e.vars.get(name)
 }

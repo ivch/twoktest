@@ -3,6 +3,7 @@ package eval
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
@@ -21,6 +22,16 @@ const (
 	valueKey     = "value"
 	operand1Key  = "operand1"
 	operand2Key  = "operand2"
+)
+
+var (
+	errVarExists    = errors.New("variable already exists")
+	errVarNotFound  = errors.New("variable not found")
+	errVarBadType   = errors.New("bad variable type")
+	errVarBadName   = errors.New("bad variable name")
+	errVarBadRef    = errors.New("bad variable reference")
+	errFuncNotFound = errors.New("function not found")
+	errFuncBadCall  = errors.New("function bad call")
 )
 
 type Eval struct {
@@ -51,7 +62,11 @@ func (e *Eval) Run(in []byte) error {
 func (e *Eval) run(name string, commands []cmd, called map[string]interface{}) error {
 	_, ok := e.funcs[name]
 	if !ok {
-		return errors.New("no function: " + name)
+		return fmt.Errorf("%f: %s", errFuncNotFound, name)
+	}
+
+	if commands == nil {
+		commands = e.funcs[name]
 	}
 
 	for i := range commands {
@@ -90,30 +105,27 @@ func (e *Eval) run(name string, commands []cmd, called map[string]interface{}) e
 func (e *Eval) evalCommand(in map[string]interface{}) (string, error) {
 	c, ok := in[callKey]
 	if !ok {
-		return "", errors.New("wrong function command call")
+		return "", fmt.Errorf("%w: no command call", errFuncBadCall)
 	}
 
 	command, ok := c.(string)
 	if !ok {
-		return "", errors.New("wrong function command")
+		return "", fmt.Errorf("%w: wrong function command", errFuncBadCall)
 	}
 
 	if len(command) == 0 {
-		return "", errors.New("wrong function command size")
+		return "", fmt.Errorf("%w: wrong function command size", errFuncBadCall)
 	}
 
-	switch command[0] {
-	case '#':
-		cmds, ok := e.funcs[command[1:]]
-		if !ok {
-			return "", errors.New("no function: " + command[1:])
-		}
-		return "", e.run(command[1:], cmds, in)
-	case '$':
-	default:
+	if command[0] != '#' {
 		return command, nil
 	}
-	return "", nil
+
+	cmds, ok := e.funcs[command[1:]]
+	if !ok {
+		return "", fmt.Errorf("%w: %s", errFuncNotFound, command[1:])
+	}
+	return "", e.run(command[1:], cmds, in)
 }
 
 func (e *Eval) parseInput(in []byte) error {

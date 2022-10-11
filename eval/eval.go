@@ -25,13 +25,15 @@ const (
 )
 
 var (
-	errVarExists    = errors.New("variable already exists")
-	errVarNotFound  = errors.New("variable not found")
-	errVarBadType   = errors.New("bad variable type")
-	errVarBadName   = errors.New("bad variable name")
-	errVarBadRef    = errors.New("bad variable reference")
-	errFuncNotFound = errors.New("function not found")
-	errFuncBadCall  = errors.New("function bad call")
+	errVarExists     = errors.New("variable already exists")
+	errVarNotFound   = errors.New("variable not found")
+	errVarBadType    = errors.New("bad variable type")
+	errVarBadName    = errors.New("bad variable name")
+	errVarBadRef     = errors.New("bad variable reference")
+	errFuncNotFound  = errors.New("function not found")
+	errFuncBadCall   = errors.New("function bad call")
+	errParseBadType  = errors.New("unexpected type")
+	errParseBadInput = errors.New("incorrect cmd input")
 )
 
 type Eval struct {
@@ -143,13 +145,13 @@ func (e *Eval) parseInput(in []byte) error {
 			for name, f := range v {
 				fn, ok := f.(map[string]interface{})
 				if !ok {
-					return errors.New("incorrect cmd input")
+					return errParseBadInput
 				}
 				functions[name] = fn
 			}
 			e.funcs[k] = functions
 		default:
-			return errors.New("unexpected type")
+			return errParseBadType
 		}
 	}
 	return nil
